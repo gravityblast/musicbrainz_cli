@@ -1,9 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'active_musicbrainz'
-require 'ripl'
 require 'optparse'
-require 'yaml'
 require 'musicbrainz_cli'
 
 DEFAULT_CONFIGURATION_FILE = '~/.musicbrainz_cli.yml'
@@ -20,16 +17,35 @@ OptionParser.new do |opts|
   opts.on '-f', '--config-file FILE', String, 'Load database config file' do |v|
     options[:config_file] = v
   end
+
+  opts.on_tail '-h', '--help', 'Help' do
+    puts opts
+    exit
+  end
+
+  opts.on_tail '--version', 'Show version' do
+    puts MusicbrainzCli::VERSION
+    exit
+  end
 end.parse!
 
+options[:config_file] = File.expand_path(options[:config_file].to_s)
+
 unless File.exists? options[:config_file]
-  puts 'Configuration file not found'
-  puts "Add database configuration in the default file (#{DEFAULT_CONFIGURATION_FILE}) or use the -f option"
+  puts "Configuration file not found (#{options[:config_file]})."
+  puts "Default configuration file is #{DEFAULT_CONFIGURATION_FILE}."
+  puts "You can also specify the config file with the -f option."
+  puts "Configuration file example:"
+  puts ":database:
+  :adapter: 'postgresql'
+  :host: 'localhost'
+  :username: 'root'
+  :password: ''
+  :database: 'musicbrainz'
+  :username: 'musicbrainz'"
   exit 1
 end
 
-config = YAML.load_file options[:config_file]
-
-ActiveRecord::Base.establish_connection config[:database]
+MusicbrainzCli.init options[:config_file]
 cli = MusicbrainzCli::CLI.new options
 cli.loop
