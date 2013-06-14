@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+require 'active_musicbrainz'
+require 'ripl'
+require 'optparse'
+require 'yaml'
+require 'musicbrainz_cli'
+
+DEFAULT_CONFIGURATION_FILE = '~/.musicbrainz_cli.yml'
+
+options = {
+  config_file: DEFAULT_CONFIGURATION_FILE
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{File.basename(__FILE__)} [options]"
+  opts.on '-v', '--verbose', 'Run queries verbosely' do |v|
+    options[:logdev] = STDOUT
+  end
+  opts.on '-f', '--config-file FILE', String, 'Load database config file' do |v|
+    options[:config_file] = v
+  end
+end.parse!
+
+unless File.exists? options[:config_file]
+  puts 'Configuration file not found'
+  puts "Add database configuration in the default file (#{DEFAULT_CONFIGURATION_FILE}) or use the -f option"
+  exit 1
+end
+
+config = YAML.load_file options[:config_file]
+
+ActiveRecord::Base.establish_connection config[:database]
+cli = MusicbrainzCli::CLI.new options
+cli.loop
