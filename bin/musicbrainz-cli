@@ -39,10 +39,9 @@ unless File.exists? options[:config_file]
   puts ":database:
   :adapter: 'postgresql'
   :host: 'localhost'
-  :username: 'root'
+  :username: 'musicbrainz'
   :password: ''
-  :database: 'musicbrainz'
-  :username: 'musicbrainz'"
+  :database: 'musicbrainz'"
   exit 1
 end
 
